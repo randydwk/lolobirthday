@@ -5,6 +5,8 @@ const express = require("express");
 const pool = require('./db');
 
 const PORT = process.env.PORT || 3001;
+console.log(process.env.PGUSER);
+console.log(process.env.PORT);
 
 const app = express();
 app.use(express.json());
