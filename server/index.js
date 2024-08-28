@@ -5,14 +5,26 @@ const express = require("express");
 const pool = require('./db');
 
 const PORT = process.env.PORT || 3001;
-console.log(process.env.PGUSER);
-console.log(process.env.PORT);
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.resolve(__dirname, '../client/build')));
 
-// Cocktails
+app.get('/testdb', async (req, res) => {
+  try {
+    res.json({serverport:process.env.PORT,
+      user:process.env.PGUSER,
+      host:process.env.PGHOST,
+      databse:process.env.PGDATABASE,
+      password:process.env.PGPASSWORD,
+      port:process.env.PGPORT,
+      node_env:process.env.NODE_ENV
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 app.get('/cocktail', async (req, res) => {
   try {
