@@ -24,7 +24,7 @@ const Gestion = () => {
     fetch('/cocktail')
       .then((res) => res.json())
       .then((data) => {
-        setCocktails(data);
+        setCocktails(data.sort((a,b) => a.id-b.id));
       })
       .catch((error) => {
         console.error('Error fetching data:', error);

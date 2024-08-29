@@ -12,7 +12,7 @@ app.use(express.static(path.resolve(__dirname, '../client/build')));
 
 app.get('/cocktail', async (req, res) => {
   try {
-    const cocktailsResult = await pool.query('SELECT c.id,c.name,c.type,c.spirit,c.instructions,g.name as glass,c.img FROM cocktail c JOIN glass g ON g.id = c.glass');
+    const cocktailsResult = await pool.query('SELECT c.id,c.name,c.type,c.spirit,c.instructions,g.name as glass,c.img,c.nbmade FROM cocktail c JOIN glass g ON g.id = c.glass');
     const cocktails = cocktailsResult.rows;
 
     for (const cocktail of cocktails) {
@@ -64,6 +64,8 @@ app.post('/cocktailmake', async (req, res) => {
       const { cocktailId, cocktailNb } = req.body;
 
       await client.query('BEGIN');
+
+      await client.query(`UPDATE cocktail SET nbmade = nbmade - $1 WHERE id = $2`,[cocktailNb,cocktailId]);
 
       const {rows: recipes} = await client.query(`
         SELECT r.ingredient_id as ingredient_id, sum(r.quantity) as quantity, i.name, i.stock
