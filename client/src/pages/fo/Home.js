@@ -36,7 +36,7 @@ const Home = () => {
       <div className='text-center' style={{padding:'10px',backgroundColor:'white',borderBottom:'solid 3px var(--resalib)'}}>
         <img src={`images/cocktalib.png`} alt="Cocktalib Logo" />
       </div>
-      <h1>Au menu</h1>
+      <h1>À la carte</h1>
       <div className='article-column-container'>
         {cocktails.length === 0 ? (
           <i>Chargement...</i>
@@ -88,6 +88,10 @@ const Home = () => {
         )}
       </div>
       <p className='text-center'><i>Cliquez sur une boisson pour voir sa composition</i></p>
+      <p className='text-center' style={{color:'var(--text-soft)!important',textDecoration:'none'}}>
+        <a href="/gestion" style={{color:'var(--text-soft)!important',textDecoration:'none'}}>©</a>
+        &nbsp;Cocktalib 2024
+      </p>
 
       <CocktailModal
         isOpen={modalIsOpen}
