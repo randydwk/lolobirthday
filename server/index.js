@@ -10,53 +10,49 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.resolve(__dirname, '../client/build')));
 
-app.get('/cocktail', async (req, res) => {
+app.get('/players', async (req, res) => {
   try {
-    const cocktailsResult = await pool.query('SELECT c.id,c.name,c.type,c.spirit,c.instructions,g.name as glass,c.img,c.nbmade FROM cocktail c JOIN glass g ON g.id = c.glass');
-    const cocktails = cocktailsResult.rows;
-
-    for (const cocktail of cocktails) {
-      const ingredientsQuery = `SELECT i.stock, r.quantity
-                                FROM recipe r JOIN ingredient i ON r.ingredient_id = i.id
-                                WHERE r.cocktail_id = $1`;
-      const ingredientsResult = await pool.query(ingredientsQuery, [cocktail.id]);
-      const ingredients = ingredientsResult.rows;
-
-      cocktail.maxMake = Infinity;
-      for (const ingredient of ingredients) {
-        const possibleCocktails = Math.floor(ingredient.stock / ingredient.quantity);
-
-        if (possibleCocktails < cocktail.maxMake) {
-          cocktail.maxMake = possibleCocktails;
-        }
-      }
-
-    }
-
-    res.json(cocktails);
+    const players = await pool.query('SELECT * FROM player');
+    res.json(players.rows);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
 
-app.get('/cocktail/:id', async (req, res) => {
-  const cocktailId = parseInt(req.params.id, 10);
+app.get('/gamestep/:id', async (req, res) => {
+  const gamestepId = parseInt(req.params.id);
 
   try {
-    const ingredientsResult = await pool.query(`SELECT i.name,i.stock,i.unit,r.step,r.proportion,r.quantity,r.showclient
-                                                FROM recipe r JOIN ingredient i ON r.ingredient_id = i.id
-                                                WHERE r.cocktail_id = $1`,[cocktailId]);
+    const gamestepResult = await pool.query(`SELECT * FROM gamestep g WHERE g.id = $1`,[gamestepId]);
+    res.json(gamestepResult.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
-    const ingredients = ingredientsResult.rows;
+app.get('/code/:code', async (req, res) => {
+  const code = req.params.code;
 
-    res.json({ingredients});
+  try {
+    const gamestepResult = await pool.query(`SELECT * FROM gamestep g WHERE g.code = $1`,[code]);
+
+    const gamestep = gamestepResult.rows;
+
+    if (gamestep.length>0) {
+      res.json({gamestep});
+    } else {
+      res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
+    }
+
   } catch (error) {
-    console.error('Error fetching cocktail details:', error);
+    console.error('Error fetching gamestep details:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+/*
 app.post('/cocktailmake', async (req, res) => {
   try {
     const client = await pool.connect();
@@ -108,65 +104,7 @@ app.post('/cocktailmake', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
-
-// Ingredients
-
-app.get('/ingredient', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM ingredient');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-app.post('/ingredientreload', async (req, res) => {
-  try {
-    const { ingredientId, quantity } = req.body;
-
-    const result = await pool.query(`UPDATE ingredient SET stock = stock + $1 WHERE id = $2 RETURNING *;`,[quantity,ingredientId]);
-    await pool.query(`UPDATE ingredient SET stock = 0 WHERE stock < 0;`);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Ingredient not found.' });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-// Glasses
-
-app.get('/glass', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM glass');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-app.post('/glassreload', async (req, res) => {
-  try {
-    const { glassId, quantity } = req.body;
-
-    const result = await pool.query(`UPDATE glass SET stock = stock + $1 WHERE id = $2 ${quantity>0?'':'AND stock > 0 '}RETURNING *;`,[quantity,glassId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Glass not found.' });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
+*/
 
 // General
 
