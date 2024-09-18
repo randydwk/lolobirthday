@@ -20,30 +20,48 @@ app.get('/players', async (req, res) => {
   }
 });
 
-app.get('/gamestep/:id', async (req, res) => {
-  const gamestepId = parseInt(req.params.id);
+app.get('/player/:id', async (req, res) => {
+  const playerId = parseInt(req.params.id);
 
   try {
-    const gamestepResult = await pool.query(`SELECT * FROM gamestep g WHERE g.id = $1`,[gamestepId]);
-    res.json(gamestepResult.rows[0]);
+    const currentPlayer = (await pool.query(`SELECT p.id,name,step,score,place as stepplace,title as steptitle,enigm as stepenigm
+                                            FROM player p JOIN gamestep g ON p.step=g.id
+                                            WHERE p.id = $1`,[playerId])).rows[0];
+    res.json(currentPlayer);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
 
-app.get('/code/:code', async (req, res) => {
-  const code = req.params.code;
+app.post('/code', async (req, res) => {
+  const { code, playerId } = req.body;
 
   try {
-    const gamestepResult = await pool.query(`SELECT * FROM gamestep g WHERE g.code = $1`,[code]);
+    const gamestep = (await pool.query(`SELECT * FROM gamestep g WHERE g.code = $1`,[code])).rows;
+    const currentPlayer = (await pool.query(`SELECT * FROM player p WHERE p.id = $1`,[playerId])).rows;
 
-    const gamestep = gamestepResult.rows;
+    
+    if (currentPlayer.length>0) {
+      if (gamestep.length>0 && gamestep[0].id === (currentPlayer[0].step+1)) {
+        await pool.query(`UPDATE player SET step = $1 WHERE id = $2`,[gamestep[0].id,currentPlayer[0].id]);
 
-    if (gamestep.length>0) {
-      res.json({gamestep});
+        const newScore = currentPlayer[0].score+Math.floor(5+gamestep[0].id*10);
+        await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
+
+        res.status(200).json({ message: 'SUCCESS' });
+      } else if ((gamestep.length>0 && gamestep[0].id <= currentPlayer[0].step)) {
+        res.status(200).json({ message: 'VISITED' });
+      } else if (currentPlayer[0].step==10) {
+        res.status(200).json({ message: 'END' });
+      } else {
+        const newScore = currentPlayer[0].score-30;
+        await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
+
+        res.status(200).json({ message: 'ACCIDENT' });
+      }
     } else {
-      res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
+      res.status(404).json({ message: 'Player not found' });
     }
 
   } catch (error) {

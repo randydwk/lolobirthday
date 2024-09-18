@@ -1,97 +1,98 @@
 import React, { useEffect, useState } from 'react';
 import Player from './Player';
-//import CocktailModal from './CocktailModal';
+import GameModal from './GameModal';
 import '../styles.css';
 
 const Home = () => {
   const [players,setPlayers] = useState([]);
   const [currentPlayer,setCurrentPlayer] = useState(null);
-  const [currentStep,setCurrentStep] = useState({});
-  //const [selectedCocktail, setSelectedCocktail] = useState(null);
-  //const [modalIsOpen, setModalIsOpen] = useState(false);
-
+  const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
+  const [gameModalState, setGameModalState] = useState(null);
+  
   useEffect(() => {
-    fetch('/players')
+    const playerId = window.localStorage.getItem("currentPlayer");
+    if (playerId){
+      fetchCurrentPlayer(playerId);
+
+      const queryParameters = new URLSearchParams(window.location.search);
+      const state = queryParameters.get("s");
+      if (state) openGameModal(state);
+    } else {
+      fetch('/players')
       .then((res) => res.json())
-      .then((data) => {
-        setPlayers(data);
-
-        const playerId = window.localStorage.getItem("currentPlayer");
-        if (playerId){
-          const cp = data.find(p => p.id===parseInt(playerId));
-          setCurrentPlayer(cp);
-          fetchGamestep(cp.step);
-        }
-
-      })
+      .then((data) => setPlayers(data))
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
-  }, []);
+    }
+  },[]);
 
   const selectPlayer = (playerId) => {
     const cp = players.find(p => p.id===playerId);
     setCurrentPlayer(cp);
     window.localStorage.setItem("currentPlayer",playerId);
-    fetchGamestep(cp.step);
+    fetchCurrentPlayer(cp.id);
   };
 
-  const fetchGamestep = (gamestepId) => {
-    fetch(`/gamestep/${gamestepId}`)
+  const fetchCurrentPlayer = (playerId) => {
+    fetch(`/player/${playerId}`)
       .then((res) => res.json())
       .then((data) => {
-        setCurrentStep(data);
+        setCurrentPlayer(data);
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
   }
-/*
-  const openModal = (cocktail) => {
+
+  const openGameModal = (state) => {
     document.body.classList.add('no-scroll');
-    setSelectedCocktail(cocktail);
-    setModalIsOpen(true);
+    setGameModalState(state);
+    setGameModalIsOpen(true);
   };
 
-  const closeModal = () => {
+  const closeGameModal = () => {
     document.body.classList.remove('no-scroll');
-    setModalIsOpen(false);
-    setSelectedCocktail(null);
-  };*/
+    setGameModalIsOpen(false);
+    setGameModalState('');
+  };
 
   return (
-    players.length>0 ? (
-      <div>
-        <div className='column-container'>
-          {currentPlayer ? (
-            <>
-              <h1>Bonjour {currentPlayer.name} 👋</h1>
-              <h4 className='text-hr'><span>Bonjour</span></h4>
-              <div className='top-element title'>Road Trip en Amérique - Étape {currentPlayer.step}</div>
-              <img 
-                src={`images/map/gamestep_${currentPlayer.step}.png`} 
-                alt={`Carte de l'étape ${currentPlayer.step}`} 
-                className='middle-element'
-              />
-              {currentStep ? (
-                <>
-                <div className='bottom-element title' style={{fontSize:'1em'}}>{currentStep.place}</div>
-                  <br></br>
-                  <img 
-                    src={`images/place/place_${currentPlayer.step}.png`} 
-                    alt={`Image de l'étape ${currentPlayer.step}`} 
-                    className='top-element'
-                    style={{height:"150px",objectFit:"cover"}}
-                  />
-                  <div className='middle-element title'>{currentStep.title}</div>
-                  <div className='bottom-element text'>{currentStep.enigme}</div>
-                </>
-              ) : ''}
+    <div>
+      <div className='column-container'>
+        {currentPlayer ? (
+          <>
+            <h1 className='bg' style={{marginBlockEnd:0}}>Bonjour {currentPlayer.name} 👋</h1>
+            <h3 className='bg'>{currentPlayer.score} points</h3>
+            <div className='top-element title'>Road Trip en Amérique - Étape {currentPlayer.step}</div>
+            <img 
+              src={`images/map/gamestep_${currentPlayer.step}.png`} 
+              alt={`Carte de l'étape ${currentPlayer.steptitle}`} 
+              className='middle-element'
+            />
+            <div className='bottom-element title' style={{fontSize:'1em'}}>{currentPlayer.stepplace}</div>
               <br></br>
-            </>
-          ) : (
+              <img 
+                src={`images/place/place_${currentPlayer.step}.png`} 
+                alt={`Étape ${currentPlayer.steptitle}`}
+                className='top-element'
+                style={{height:"150px",objectFit:"cover"}}
+              />
+              <div className='middle-element title'>{currentPlayer.steptitle}</div>
+              <div className='bottom-element text'>{currentPlayer.stepenigm}</div>
+            <br></br>
+
+            <GameModal
+              isOpen={gameModalIsOpen}
+              onRequestClose={closeGameModal}
+              currentPlayer={currentPlayer}
+              state={gameModalState}
+            />
+          </>
+        ) : (
+          players.length>0 ? (
             <>
-              <h1>Sélectionnez votre profil</h1>
+              <h1 className='bg'>Sélectionnez votre profil</h1>
               <div>
                 {players.sort((a,b) => a.name.localeCompare(b.name)).map((player) => (
                     <div 
@@ -106,22 +107,19 @@ const Home = () => {
                   ))}
               </div>
             </>
-          )}
-        </div>
-        <div className='text-center' style={{color:'var(--text-soft)!important',backgroundColor:'var(--background)',textDecoration:'none'}}>
-          <span onClick={() => window.localStorage.removeItem("currentPlayer")} style={{color:'var(--text-soft)!important'}}>©</span>
-          &nbsp;Maddy Wan 2024
-        </div>
+          ) : (
+            <div className='column-container'>
+              <h5><i>Chargement...</i></h5>
+            </div>
+          )
+        )}
       </div>
-    ) : <div className='column-container'>
-      <h5><i>Chargement...</i></h5>
+      <div className='text-center' style={{color:'var(--text-soft)!important',backgroundColor:'var(--background)',textDecoration:'none'}}>
+        <span onClick={() => window.localStorage.removeItem("currentPlayer")} style={{color:'var(--text-soft)!important'}}>©</span>
+        &nbsp;Maddy Wan 2024
+      </div>
     </div>
   )
 };
 
 export default Home;
-/*<CocktailModal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        cocktail={selectedCocktail}
-      />*/

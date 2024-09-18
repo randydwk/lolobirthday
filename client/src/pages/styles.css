@@ -38,21 +38,21 @@ body {
 h1,h2,h3,h4,h5,h6 {
     text-align: center;
     color: var(--text);
-    background-color: var(--background);
-    margin-top: 20px;
-    padding: 10px;
-    box-shadow: 0 0 10px -5px black;
 }
 
-h1 {
-    font-size: 2em;
+h1.bg,h2.bg,h3.bg,h4.bg,h5.bg,h6.bg {
+    background-color: var(--background);
+    padding: 10px;
+    box-shadow: 0 0 10px -5px black;
     border-radius: 16px;
 }
 
-h5 {
-    font-size: 1em;
-    border-radius: 8px;
-}
+h1 {font-size: 2em;}
+h2 {font-size: 1.75em;}
+h3 {font-size: 1.5em;}
+h4 {font-size: 1.25em;}
+h5 {font-size: 1em;}
+h6 {font-size: 0.75em;}
 
 .text-center {
     text-align: center;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/fo/Home';
+import Code from './pages/fo/Code';
 import Gestion from './pages/bo/Gestion';
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/c" element={<Code />} />
         <Route path="/gestion" element={<Gestion />} />
       </Routes>
     </Router>
