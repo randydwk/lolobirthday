@@ -39,7 +39,7 @@ const GameModal = ({ isOpen, onRequestClose, currentPlayer, state }) => {
           {state==='a' ? (
             <>
               <h2 className='text-center' style={{marginBlockStart:'0'}}>Accident !</h2>
-              <p>Vous vous êtes trompé de route et avez fait un demi-tour trop brusque...</p>
+              <p>Aïe, tu t'es trompé de route et t'as fait un demi-tour trop brusque... {currentPlayer.id===6?'Il ne fallait pas oublier le saucisson !':''}</p>
               <p>-30 points</p>
             </>
           ) : ''}

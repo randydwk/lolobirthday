@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Player from './Player';
 import GameModal from './GameModal';
-import '../styles.css';
+import './styles.css';
 
 const Home = () => {
   const [players,setPlayers] = useState([]);
@@ -59,9 +58,9 @@ const Home = () => {
 
   return (
     <div>
-      <div className='column-container'>
-        {currentPlayer ? (
-          <>
+      {currentPlayer ? (
+        <>
+          <div className='column-container'>
             <h1 className='bg' style={{marginBlockEnd:0}}>Bonjour {currentPlayer.name} 👋</h1>
             <h3 className='bg'>{currentPlayer.score} points</h3>
             <div className='top-element title'>Road Trip en Amérique - Étape {currentPlayer.step}</div>
@@ -81,17 +80,19 @@ const Home = () => {
               <div className='middle-element title'>{currentPlayer.steptitle}</div>
               <div className='bottom-element text'>{currentPlayer.stepenigm}</div>
             <br></br>
+          </div>
 
-            <GameModal
-              isOpen={gameModalIsOpen}
-              onRequestClose={closeGameModal}
-              currentPlayer={currentPlayer}
-              state={gameModalState}
-            />
-          </>
-        ) : (
-          players.length>0 ? (
-            <>
+          <GameModal
+            isOpen={gameModalIsOpen}
+            onRequestClose={closeGameModal}
+            currentPlayer={currentPlayer}
+            state={gameModalState}
+          />
+        </>
+      ) : (
+        players.length>0 ? (
+          <>
+            <div className='column-container'>
               <h1 className='bg'>Sélectionnez votre profil</h1>
               <div>
                 {players.sort((a,b) => a.name.localeCompare(b.name)).map((player) => (
@@ -100,20 +101,20 @@ const Home = () => {
                       onClick={() => selectPlayer(player.id)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <Player
-                        player={player}
-                      />
+                      <div className='box-container'>
+                        <p className='box-text'>{player.name}</p>
+                      </div>
                     </div>
                   ))}
               </div>
-            </>
-          ) : (
-            <div className='column-container'>
-              <h5><i>Chargement...</i></h5>
             </div>
-          )
-        )}
-      </div>
+          </>
+        ) : (
+          <div className='column-container'>
+            <h5><i>Chargement...</i></h5>
+          </div>
+        )
+      )}
       <div className='text-center' style={{color:'var(--text-soft)!important',backgroundColor:'var(--background)',textDecoration:'none'}}>
         <span onClick={() => window.localStorage.removeItem("currentPlayer")} style={{color:'var(--text-soft)!important'}}>©</span>
         &nbsp;Maddy Wan 2024
