@@ -1,12 +1,15 @@
 require('dotenv').config();
-
 const path = require('path');
 const express = require("express");
-const pool = require('./db');
+const multer = require('multer');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const sharp = require('sharp');
+const ExifReader = require('exif-reader');
 const url = require('url');
 const uuidv4 = require("uuid").v4;
 const http = require('http');
 const {WebSocketServer} = require('ws');
+const pool = require('./db');
 
 const PORT = process.env.PORT || 3001;
 
@@ -59,7 +62,58 @@ wsServer.on("connection", (connection, request) => {
   connection.on("close", () => handleClose(uuid));
 })
 
-// Endpoints
+// Photos upload
+
+const upload = multer();
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+app.post('/upload', upload.single('photo'), async (req, res) => {
+  try {
+    const file = req.file;
+    const authorId = req.body.authorId;
+
+    const imageBuffer = file.buffer;
+    const metadata = await sharp(imageBuffer).metadata();
+    let resizedImage = sharp(imageBuffer);
+    if (metadata.orientation) resizedImage = resizedImage.rotate();
+    resizedImage = await resizedImage
+      .resize({ width: 1920, height: 1920, fit: 'inside' })
+      .toBuffer();
+
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const formattedTime = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+    const randomNum = Math.floor(Math.random() * 100);
+    const fileName = `IMG_BD_${formattedDate}_${formattedTime}_${randomNum}`;
+    const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: fileName,
+        Body: resizedImage,
+        ContentType: file.mimetype
+    };
+
+    const command = new PutObjectCommand(params);
+    await s3.send(command);
+
+    const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    const newPhoto = await pool.query('INSERT INTO photo (filename,author,url) VALUES ($1,$2,$3) RETURNING *',[fileName,authorId,s3Url]);
+
+    sendMessage({msg:"PHOTO",to:"gestion",url:s3Url});
+    res.json({ message: 'Upload successful', photo:newPhoto.rows[0] });
+  } catch (err) {
+    console.error('Error uploading to S3 or saving to DB:', err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Database
 
 app.get('/players', async (req, res) => {
   try {

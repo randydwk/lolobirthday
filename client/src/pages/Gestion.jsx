@@ -4,6 +4,7 @@ import useWebSocket from "react-use-websocket"
 
 const Gestion = () => {
   const [players,setPlayers] = useState([]);
+  const [photoUrl,setPhotoUrl] = useState('');
 
   useEffect(() => {
     fetchPlayers();
@@ -18,6 +19,8 @@ const Gestion = () => {
     if (lastJsonMessage !== null) {
       if (lastJsonMessage.msg === 'SCORE') {
         fetchPlayers();
+      } else if (lastJsonMessage.msg === 'PHOTO') {
+        setPhotoUrl(lastJsonMessage.url);
       }
       console.log(lastJsonMessage);
     }
@@ -37,7 +40,10 @@ const Gestion = () => {
       {players.length>0 ? (
         <>
           <div className='column-container'>
-            <h1 className='bg'>🎂 Lolo & Steeve Birthday 🎂</h1>
+          <h1 className='bg' style={{position:'fixed'}}>🎂 Lolo & Steeve Birthday 🎂</h1>
+            {photoUrl ? <>
+              <img src={photoUrl} alt={photoUrl}></img>
+            </> : <></>}
           </div>
           <div className='score-container'>
             <h4 className='score title'>Scores</h4>

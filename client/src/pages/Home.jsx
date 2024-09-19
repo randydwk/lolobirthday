@@ -1,34 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import GameModal from './GameModal';
 import './styles.css';
-import useWebSocket, { ReadyState } from "react-use-websocket"
+import useWebSocket from "react-use-websocket"
 
 const Home = () => {
   const [players,setPlayers] = useState([]);
   const [currentPlayer,setCurrentPlayer] = useState(null);
   const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
   const [gameModalState, setGameModalState] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Web sockets
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(process.env.REACT_APP_WS_URL, {
+  useWebSocket(process.env.REACT_APP_WS_URL, {
     queryParams: { username:currentPlayer?currentPlayer.name:"unknown-user" }
   });
-
-  useEffect(() => {
-    if (lastJsonMessage !== null) {
-      console.log(lastJsonMessage);
-    }
-  }, [lastJsonMessage])
-
-  const handleClickSendMessage = () => sendJsonMessage({message:"hello",for:"gestion"});
-
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: 'Connecting',
-    [ReadyState.OPEN]: 'Open',
-    [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
-    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-  }[readyState];
   
   useEffect(() => {
     const playerId = window.localStorage.getItem("currentPlayer");
@@ -66,6 +51,35 @@ const Home = () => {
       });
   }
 
+  // Photo
+
+  const uploadPhoto = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('photo', file);
+        formData.append('authorId', currentPlayer.id);
+        setUploadingPhoto(true);
+
+        fetch(`/upload`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Upload successful:', data);
+            setUploadingPhoto(false);
+        })
+        .catch(error => {
+            console.error('Error uploading photo:', error);
+            window.alert('Erreur pendant l\'envoi de la photo');
+            setUploadingPhoto(false);
+        });
+      }
+  };
+
+  // Game Modal
+
   const openGameModal = (state) => {
     document.body.classList.add('no-scroll');
     setGameModalState(state);
@@ -85,8 +99,6 @@ const Home = () => {
           <div className='column-container'>
             <h1 className='bg' style={{marginBlockEnd:0}}>Bonjour {currentPlayer.name} 👋</h1>
             <h3 className='bg'>{currentPlayer.score} points</h3>
-            <button onClick={handleClickSendMessage}>Send Hello</button>
-            {connectionStatus}
             <div className='top-element title'>Road Trip en Amérique - Étape {currentPlayer.step}</div>
             <img 
               src={`images/map/gamestep_${currentPlayer.step}.png`} 
@@ -105,6 +117,19 @@ const Home = () => {
               <div className='bottom-element text'>{currentPlayer.stepenigm}</div>
             <br></br>
           </div>
+
+          <div className="sticky-bar" v-if="isPart(user.id)&&!isFinished">
+            {uploadingPhoto ? <>
+              <button style={{pointerEvents:"none"}} disabled><i className="fa fa-camera"></i> Envoi en cours...</button>
+            </> : 
+            <>
+              <label style={{display:"block"}}>
+                  <input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={uploadPhoto}/>
+                  <button style={{pointerEvents:"none"}}><i className="fa fa-camera"></i> Prendre une photo</button>
+              </label>
+            </>}
+          </div>
+          <div className='sticky-bar-space'></div>
 
           <GameModal
             isOpen={gameModalIsOpen}
