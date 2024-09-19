@@ -1,7 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import './styles.css';
+import useWebSocket, { ReadyState } from "react-use-websocket"
 
-const Home = () => {
+const Gestion = () => {
+  // Web sockets
+  const { sendMessage, lastMessage, readyState } = useWebSocket('ws://birthday.randy-dewancker.fr:3002');
+
+  useEffect(() => {
+    if (lastMessage !== null) {
+      console.log(lastMessage);
+    }
+  }, [lastMessage])
+
+  const connectionStatus = {
+    [ReadyState.CONNECTING]: 'Connecting',
+    [ReadyState.OPEN]: 'Open',
+    [ReadyState.CLOSING]: 'Closing',
+    [ReadyState.CLOSED]: 'Closed',
+    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
+  }[readyState];
+
   const [players,setPlayers] = useState([]);
   
   useEffect(() => {
@@ -19,6 +37,7 @@ const Home = () => {
         <>
           <div className='column-container'>
             <h1 className='bg'>🎂 Lolo & Steeve Birthday 🎂</h1>
+            <h1 className='bg'>{connectionStatus}</h1>
           </div>
           <div className='score-container'>
             <h4 className='score title'>Scores</h4>
@@ -40,4 +59,4 @@ const Home = () => {
   )
 };
 
-export default Home;
+export default Gestion;

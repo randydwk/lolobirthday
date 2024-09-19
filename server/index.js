@@ -46,7 +46,7 @@ app.post('/code', async (req, res) => {
       if (gamestep.length>0 && gamestep[0].id === (currentPlayer[0].step+1)) {
         await pool.query(`UPDATE player SET step = $1 WHERE id = $2`,[gamestep[0].id,currentPlayer[0].id]);
 
-        const newScore = currentPlayer[0].score+Math.floor(5+gamestep[0].id*10);
+        const newScore = currentPlayer[0].score+10+gamestep[0].id*10;
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
 
         res.status(200).json({ message: 'SUCCESS' });
@@ -70,60 +70,6 @@ app.post('/code', async (req, res) => {
   }
 });
 
-/*
-app.post('/cocktailmake', async (req, res) => {
-  try {
-    const client = await pool.connect();
-    try {
-      const { cocktailId, cocktailNb } = req.body;
-
-      await client.query('BEGIN');
-
-      await client.query(`UPDATE cocktail SET nbmade = nbmade - $1 WHERE id = $2`,[cocktailNb,cocktailId]);
-
-      const {rows: recipes} = await client.query(`
-        SELECT r.ingredient_id as ingredient_id, sum(r.quantity) as quantity, i.name, i.stock
-        FROM recipe r JOIN ingredient i ON r.ingredient_id = i.id
-        WHERE r.cocktail_id = $1 GROUP BY r.ingredient_id, i.name, i.stock;`,
-        [cocktailId]);
-
-      for (const recipe of recipes) {
-        const newStock = Math.max(recipe.stock+(recipe.quantity*cocktailNb),0);
-        await client.query(`UPDATE ingredient SET stock = $1 WHERE id = $2`,[newStock,recipe.ingredient_id]);
-      }
-
-      const {rows: glass} = await client.query(`
-        SELECT g.id,g.stock
-        FROM glass g
-        JOIN cocktail c ON g.id = c.glass
-        WHERE c.id = $1`,
-        [cocktailId]);
-      
-      if (glass.length === 0) {throw new Error('No glass found for the provided cocktail ID.');}
-
-      const newGlassStock = Math.max(glass[0].stock+cocktailNb,0);
-      await client.query(`UPDATE glass SET stock = $1 WHERE id = $2`,[newGlassStock,glass[0].id]);
-
-      await client.query('COMMIT');
-      res.json({ success: true, message: 'Cocktail made successfully!' });
-
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-    // if (newStock < 0) {
-    //   await client.query('ROLLBACK');
-    //   return res.status(400).json({ success: false, message: `Plus assez de ${recipe.name} en stock.` });
-    // }
-  } catch (error) {
-    console.error('Error making cocktail:', error);
-    res.status(500).json({ success: false, message: 'Server error.' });
-  }
-});
-*/
-
 // General
 
 app.get('*', (req, res) => {
@@ -132,4 +78,30 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
+});
+
+// Websockets
+
+const WS_PORT = 3002;
+const WebSocket = require('ws');
+
+const wss = new WebSocket.Server({ port: WS_PORT }, () => {
+  console.log(`WebSocket server listening on ${WS_PORT}`);
+});
+
+wss.on('connection', ws => {
+  console.log('New client connected');
+
+  ws.on('message', message => {
+    console.log(`Received message => ${message}`);
+    ws.send(`Echo: ${message}`);
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+
+  ws.on('error', error => {
+    console.error('WebSocket error:', error);
+  });
 });

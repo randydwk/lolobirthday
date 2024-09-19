@@ -18,7 +18,7 @@ const GameModal = ({ isOpen, onRequestClose, currentPlayer, state }) => {
         <>
           <h2 className='text-center' style={{marginBlockStart:'0'}}>Nouvelle destination :</h2>
           <h3>{currentPlayer.steptitle} ({currentPlayer.stepplace})</h3>
-          <p>+{Math.floor(5+currentPlayer.step*10)} points</p>
+          <p>+{10+currentPlayer.step*10} points</p>
 
           <h3 onClick={() => {onRequestClose()}} className='modal-button btn-success'>En route !</h3>
         </>

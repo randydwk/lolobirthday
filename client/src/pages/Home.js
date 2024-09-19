@@ -1,8 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import GameModal from './GameModal';
 import './styles.css';
+import useWebSocket, { ReadyState } from "react-use-websocket"
 
 const Home = () => {
+  // Web sockets
+  const { sendMessage, lastMessage, readyState } = useWebSocket('ws://birthday.randy-dewancker.fr:3002');
+
+  useEffect(() => {
+    if (lastMessage !== null) {
+      console.log(lastMessage);
+    }
+  }, [lastMessage])
+
+  const handleClickSendMessage = () => sendMessage("hello");
+
+  const connectionStatus = {
+    [ReadyState.CONNECTING]: 'Connecting',
+    [ReadyState.OPEN]: 'Open',
+    [ReadyState.CLOSING]: 'Closing',
+    [ReadyState.CLOSED]: 'Closed',
+    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
+  }[readyState];
+
+  // Variables & functions
   const [players,setPlayers] = useState([]);
   const [currentPlayer,setCurrentPlayer] = useState(null);
   const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
@@ -63,6 +84,8 @@ const Home = () => {
           <div className='column-container'>
             <h1 className='bg' style={{marginBlockEnd:0}}>Bonjour {currentPlayer.name} 👋</h1>
             <h3 className='bg'>{currentPlayer.score} points</h3>
+            <button onClick={handleClickSendMessage}>Send Hello</button>
+            {connectionStatus}
             <div className='top-element title'>Road Trip en Amérique - Étape {currentPlayer.step}</div>
             <img 
               src={`images/map/gamestep_${currentPlayer.step}.png`} 
