@@ -59,10 +59,6 @@ wsServer.on("connection", (connection, request) => {
   connection.on("close", () => handleClose(uuid));
 })
 
-server.listen(8000,() => {
-  console.log("Websocket server listening on 8000")
-})
-
 // Endpoints
 
 app.get('/players', async (req, res) => {
@@ -132,9 +128,13 @@ app.post('/code', async (req, res) => {
 // General
 
 app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
+  res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Server listening on ${PORT}`);
-});
+// app.listen(PORT, () => {
+//     console.log(`Server listening on ${PORT}`);
+// });
+
+server.listen(PORT,() => {
+  console.log(`Websocket server listening on ${PORT}`)
+})
