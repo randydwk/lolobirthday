@@ -4,7 +4,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket"
 
 const Gestion = () => {
   // Web sockets
-  const { lastMessage, readyState } = useWebSocket('ws://birthday.randy-dewancker.fr:3002');
+  const { lastMessage, readyState } = useWebSocket('wss://birthday.randy-dewancker.fr:3002');
 
   useEffect(() => {
     if (lastMessage !== null) {
@@ -42,11 +42,11 @@ const Gestion = () => {
           <div className='score-container'>
             <h4 className='score title'>Scores</h4>
             {players.sort((a,b) => b.score-a.score).map((player) => (
-              <>
+              <div key={player.id}>
                 <div className='score left'>{player.name}</div>
                 <div className='score right'>{player.score}</div>
                 <br></br>
-              </>
+              </div>
             ))}
           </div>
         </>

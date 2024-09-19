@@ -3,7 +3,7 @@ import './styles.css';
 import useWebSocket from "react-use-websocket"
 
 const Code = () => {
-  const { sendMessage } = useWebSocket('ws://birthday.randy-dewancker.fr:3002');
+  const { sendMessage } = useWebSocket('wss://birthday.randy-dewancker.fr:3002');
   useEffect(() => {
     const playerId = window.localStorage.getItem("currentPlayer");
     const queryParameters = new URLSearchParams(window.location.search);

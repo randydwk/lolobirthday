@@ -5,7 +5,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket"
 
 const Home = () => {
   // Web sockets
-  const { sendMessage, lastMessage, readyState } = useWebSocket('ws://birthday.randy-dewancker.fr:3002');
+  const { sendMessage, lastMessage, readyState } = useWebSocket('wss://birthday.randy-dewancker.fr:3002');
 
   useEffect(() => {
     if (lastMessage !== null) {
