@@ -4,16 +4,23 @@ import './styles.css';
 import useWebSocket, { ReadyState } from "react-use-websocket"
 
 const Home = () => {
+  const [players,setPlayers] = useState([]);
+  const [currentPlayer,setCurrentPlayer] = useState(null);
+  const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
+  const [gameModalState, setGameModalState] = useState(null);
+
   // Web sockets
-  const { sendMessage, lastMessage, readyState } = useWebSocket('wss://birthday.randy-dewancker.fr:3002');
+  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(process.env.REACT_APP_WS_URL, {
+    queryParams: { username:currentPlayer?currentPlayer.name:"unknown-user" }
+  });
 
   useEffect(() => {
-    if (lastMessage !== null) {
-      console.log(lastMessage);
+    if (lastJsonMessage !== null) {
+      console.log(lastJsonMessage);
     }
-  }, [lastMessage])
+  }, [lastJsonMessage])
 
-  const handleClickSendMessage = () => sendMessage("hello");
+  const handleClickSendMessage = () => sendJsonMessage({message:"hello",for:"gestion"});
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',
@@ -22,12 +29,6 @@ const Home = () => {
     [ReadyState.CLOSED]: 'Closed',
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
-
-  // Variables & functions
-  const [players,setPlayers] = useState([]);
-  const [currentPlayer,setCurrentPlayer] = useState(null);
-  const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
-  const [gameModalState, setGameModalState] = useState(null);
   
   useEffect(() => {
     const playerId = window.localStorage.getItem("currentPlayer");

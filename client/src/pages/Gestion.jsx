@@ -1,35 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import './styles.css';
-import useWebSocket, { ReadyState } from "react-use-websocket"
+import useWebSocket from "react-use-websocket"
 
 const Gestion = () => {
-  // Web sockets
-  const { lastMessage, readyState } = useWebSocket('wss://birthday.randy-dewancker.fr:3002');
-
-  useEffect(() => {
-    if (lastMessage !== null) {
-      console.log(lastMessage);
-    }
-  }, [lastMessage])
-
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: 'Connecting',
-    [ReadyState.OPEN]: 'Open',
-    [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
-    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-  }[readyState];
-
   const [players,setPlayers] = useState([]);
-  
+
   useEffect(() => {
+    fetchPlayers();
+  },[]);
+
+  // Web sockets
+  const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
+    queryParams: { username:"gestion" }
+  });
+
+  useEffect(() => {
+    if (lastJsonMessage !== null) {
+      if (lastJsonMessage.msg === 'SCORE') {
+        fetchPlayers();
+      }
+      console.log(lastJsonMessage);
+    }
+  }, [lastJsonMessage])
+
+  const fetchPlayers = () => {
     fetch('/players')
     .then((res) => res.json())
     .then((data) => setPlayers(data))
     .catch((error) => {
       console.error('Error fetching data:', error);
     });
-  },[]);
+  }
 
   return (
     <div>
@@ -37,7 +38,6 @@ const Gestion = () => {
         <>
           <div className='column-container'>
             <h1 className='bg'>🎂 Lolo & Steeve Birthday 🎂</h1>
-            <h1 className='bg'>{connectionStatus}</h1>
           </div>
           <div className='score-container'>
             <h4 className='score title'>Scores</h4>

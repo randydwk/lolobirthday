@@ -3,12 +3,67 @@ require('dotenv').config();
 const path = require('path');
 const express = require("express");
 const pool = require('./db');
+const url = require('url');
+const uuidv4 = require("uuid").v4;
+const http = require('http');
+const {WebSocketServer} = require('ws');
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.resolve(__dirname, '../client/build')));
+
+// Websockets
+
+const server = http.createServer(app);
+const wsServer = new WebSocketServer({server});
+const connections = {};
+const users = {};
+
+const handleMessage = (bytes) => {
+  const message = JSON.parse(bytes.toString());
+  sendMessage(message);
+  console.log(message);
+}
+
+const sendMessage = (message) => {
+  Object.keys(connections).forEach(uuid => {
+    const connection = connections[uuid];
+    const user = users[uuid];
+    if (!message.to || message.to == user.username){
+      connection.send(JSON.stringify(message));
+    }
+  });
+}
+
+const handleClose = uuid => {
+  console.log(`${users[uuid].username} disconnected`);
+  delete connections[uuid];
+  delete users[uuid];
+}
+
+wsServer.on("connection", (connection, request) => {
+  const { username } = url.parse(request.url, true).query;
+  const uuid = uuidv4();
+  console.log(`${username} (${uuid}) connected`);
+
+  connections[uuid] = connection;
+  users[uuid] = {
+    username: username,
+    state: {}
+  }
+  if (username=='home') gestionUuid = uuid;
+
+  connection.on("message", message => handleMessage(message,uuid));
+  connection.on("close", () => handleClose(uuid));
+})
+
+server.listen(8000,() => {
+  console.log("Websocket server listening on 8000")
+})
+
+// Endpoints
 
 app.get('/players', async (req, res) => {
   try {
@@ -49,15 +104,19 @@ app.post('/code', async (req, res) => {
         const newScore = currentPlayer[0].score+10+gamestep[0].id*10;
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
 
+        sendMessage({msg:"SCORE",to:"gestion"});
         res.status(200).json({ message: 'SUCCESS' });
+
       } else if ((gamestep.length>0 && gamestep[0].id <= currentPlayer[0].step)) {
         res.status(200).json({ message: 'VISITED' });
+
       } else if (currentPlayer[0].step==10) {
         res.status(200).json({ message: 'END' });
+
       } else {
         const newScore = currentPlayer[0].score-30;
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
-
+        sendMessage({msg:"SCORE",to:"gestion"});
         res.status(200).json({ message: 'ACCIDENT' });
       }
     } else {
@@ -78,30 +137,4 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
-});
-
-// Websockets
-
-const WS_PORT = 3002;
-const WebSocket = require('ws');
-
-const wss = new WebSocket.Server({ port: WS_PORT }, () => {
-  console.log(`WebSocket server listening on ${WS_PORT}`);
-});
-
-wss.on('connection', ws => {
-  console.log('New client connected');
-
-  ws.on('message', message => {
-    console.log(`Received message => ${message}`);
-    ws.send(`Echo: ${message}`);
-  });
-
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
-
-  ws.on('error', error => {
-    console.error('WebSocket error:', error);
-  });
 });
