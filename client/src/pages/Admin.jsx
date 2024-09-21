@@ -10,6 +10,7 @@ const Admin = () => {
 
   const karaokeMax = 30;
   const [karaokeSongs,setKaraokeSongs] = useState([]);
+  const [videoUrl,setVideoUrl] = useState('');
 
   useEffect(() => {
     fetchParams();
@@ -18,7 +19,7 @@ const Admin = () => {
   },[]);
 
   // Web sockets
-  const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
+  const { lastJsonMessage, sendJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
     queryParams: { username:"admin" }
   });
   
@@ -104,12 +105,7 @@ const Admin = () => {
         {/* PLAYERS */}
         <div className='top-element title'>Joueurs</div>
         <div className='middle-element title'>
-          <input
-            type="number"
-            value={score}
-            onChange={(e) => setScore(e.target.value)}
-            placeholder="Score à mettre à jour"
-          />
+          <input type="number" value={score} onChange={(e) => setScore(e.target.value)} placeholder="Score à mettre à jour"/>
         </div>
         {players.sort((a,b) => a.name.localeCompare(b.name)).map(player => (
           <div className='middle-element text' key={player.id}>
@@ -125,6 +121,13 @@ const Admin = () => {
         {karaokeSongs.map(karaoke => (
           <div className='middle-element text' key={karaoke.id}>{karaoke.song} ({players.length>0 ? players.find(p => (p.id===karaoke.submitter)).name : ''})</div>
         ))}
+        <div className='middle-element title'>
+          <input type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="Lien YouTube"/>
+        </div>
+        <div className='middle-element title'>
+          <button className="btn" onClick={() => {sendJsonMessage({msg:"VIDEO",url:videoUrl})}}>Envoyer</button>
+          <button className="btn" onClick={() => {sendJsonMessage({msg:"VIDEO",url:''})}}>Retirer</button>
+        </div>
         <div className='bottom-element' style={{height:'16px'}}></div>
         <br></br>
         {/* PARAMS */}

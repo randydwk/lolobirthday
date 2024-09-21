@@ -5,6 +5,7 @@ import useWebSocket from "react-use-websocket"
 const Gestion = () => {
   const [players,setPlayers] = useState([]);
   const [photos,setPhotos] = useState([]);
+  const [videoUrl,setVideoUrl] = useState('');
   const maxPhotoSize = 300;
 
   useEffect(() => {
@@ -23,8 +24,8 @@ const Gestion = () => {
       id: photoId,
       xPos: Math.random() * (window.innerWidth-maxPhotoSize),
       yPos: Math.random() * (window.innerHeight-maxPhotoSize),
-      xSpeed: 2 + Math.random(),
-      ySpeed: 2 + Math.random(),
+      xSpeed: 2 + Math.random() * 2,
+      ySpeed: 2 + Math.random() * 2,
     };
     setPhotos((prev) => [...prev, photo]);
     setTimeout(() => {
@@ -38,6 +39,19 @@ const Gestion = () => {
         fetchPlayers();
       } else if (lastJsonMessage.msg === 'PHOTO') {
         addPhoto(lastJsonMessage.url,lastJsonMessage.authorId,lastJsonMessage.photoId);
+      } else if (lastJsonMessage.msg === 'VIDEO') {
+        if (!lastJsonMessage.url) setVideoUrl('');
+        else {
+          const match = lastJsonMessage.url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|embed|watch)\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+          const shortMatch = lastJsonMessage.url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+          if (match) {
+            setVideoUrl(match[1]);
+          } else if (shortMatch) {
+            setVideoUrl(shortMatch[1]);
+          } else {
+            setVideoUrl('');
+          }
+        }
       }
       console.log(lastJsonMessage);
     }
@@ -80,7 +94,18 @@ const Gestion = () => {
       {players.length>0 ? (
         <>
           <div className='column-container'>
-          <h1 className='bg' style={{position:'fixed'}}>🎂 Lolo & Steeve Birthday 🎂</h1>
+          <h1 className='bg' style={{position:'fixed',opacity:(videoUrl?'0.5':'1')}}>🎂 Lolo & Steeve Birthday 🎂</h1>
+          {videoUrl ? <iframe
+            width={window.innerWidth}
+            height={window.innerHeight}
+            style={{position:'fixed',zIndex:'-10'}}
+            src={`https://www.youtube.com/embed/${videoUrl}?autoplay=1&mute=1&controls=0`}
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen>
+          </iframe>:''}
           {photos.map((photo) => (
             <img
               key={photo.id}
@@ -92,13 +117,14 @@ const Gestion = () => {
                 top: `${photo.yPos}px`,
                 maxWidth: '300px',
                 maxHeight: '300px',
-                zIndex: 100
+                zIndex: 100,
+                opacity:(videoUrl?'0.5':'1')
               }}
             />
           ))}
           </div>
-          <img src="/images/qrcode.png" alt="qrcode" style={{position:'fixed',right:'20px',bottom:'20px',width:'100px'}}></img>
-          <div className='score-container'>
+          <img src="/images/qrcode.png" alt="qrcode" style={{position:'fixed',right:'20px',bottom:'20px',width:'100px',opacity:(videoUrl?'0.8':'1')}}></img>
+          <div className='score-container' style={{opacity:(videoUrl?'0.5':'1')}}>
             <h4 className='score title'>Scores</h4>
             {players.sort((a,b) => b.score-a.score).map((player) => (
               <div key={player.id}>
