@@ -5,6 +5,7 @@ import useWebSocket from "react-use-websocket"
 const Gestion = () => {
   const [players,setPlayers] = useState([]);
   const [photos,setPhotos] = useState([]);
+  const maxPhotoSize = 300;
 
   useEffect(() => {
     fetchPlayers();
@@ -16,13 +17,12 @@ const Gestion = () => {
   });
 
   const addPhoto = useCallback((url,authorId,photoId) => {
-    console.log(players.find(player => player.id===authorId));
     const photo = {
       url: url,
       //author: players.find(player => player.id===authorId).name,
       id: photoId,
-      xPos: Math.random() * window.innerWidth,
-      yPos: Math.random() * window.innerHeight,
+      xPos: Math.random() * (window.innerWidth-maxPhotoSize),
+      yPos: Math.random() * (window.innerHeight-maxPhotoSize),
       xSpeed: 2 + Math.random(),
       ySpeed: 2 + Math.random(),
     };
@@ -30,7 +30,7 @@ const Gestion = () => {
     setTimeout(() => {
       setPhotos((prev) => prev.filter(p => p.id !== photo.id));
     }, 180000);
-  },[players]);
+  },[]);
 
   useEffect(() => {
     if (lastJsonMessage !== null) {
@@ -49,17 +49,14 @@ const Gestion = () => {
         prevPhotos.map((photo) => {
           let newXPos = photo.xPos + photo.xSpeed;
           let newYPos = photo.yPos + photo.ySpeed;
-
-          if (newXPos >= (window.innerWidth-300) || newXPos <= 0) {
+          if (newXPos >= (window.innerWidth-maxPhotoSize) || newXPos <= 0) {
             newXPos = photo.xPos;
             photo.xSpeed = -photo.xSpeed;
           }
-
-          if (newYPos >= (window.innerHeight-300) || newYPos <= 0) {
+          if (newYPos >= (window.innerHeight-maxPhotoSize) || newYPos <= 0) {
             newYPos = photo.yPos;
             photo.ySpeed = -photo.ySpeed;
           }
-
           return { ...photo, xPos: newXPos, yPos: newYPos };
         })
       );

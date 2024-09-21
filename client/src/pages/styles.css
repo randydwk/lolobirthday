@@ -111,6 +111,32 @@ h6 {font-size: 0.75em;}
 
 /* Buttons */
 
+.btn {
+    background-color: var(--background);
+    color: black!important;
+    cursor: pointer;
+    border: solid 2px var(--background);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1em;
+    border-radius: 16px;
+    padding: 10px 20px;
+    box-shadow: 0 0 10px -5px black;
+    margin: 0 10px 0 10px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.btn:active {
+    background-color: var(--text);
+    color: var(--background)!important;
+}
+
+.btn:disabled {
+    background-color: var(--background-soft);
+    border: solid 2px var(--background-soft);
+    color: var(--text-soft)!important;
+}
+
 .btn-success {
     background-color: var(--success);
 }
@@ -161,12 +187,16 @@ h6 {font-size: 0.75em;}
     color: var(--text-soft)!important;
 }
 
-.sticky-bar.no-nav {
-    bottom: 30px;
-}
-
 .sticky-bar-space {
     height: 75px;
+}
+
+/* Inputs */
+
+input {
+    font-size: 1em;
+    border-radius: 8px;
+    padding: 5px
 }
 
 /* Boxes */

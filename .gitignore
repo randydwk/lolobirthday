@@ -1,5 +1,4 @@
 /node_modules
 .DS_Store
 .env
-bdd.sql
 docker-compose.yml

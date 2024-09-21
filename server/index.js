@@ -139,13 +139,50 @@ app.get('/player/:id', async (req, res) => {
   }
 });
 
+app.post('/playerscore', async (req, res) => {
+  const { playerId, score } = req.body;
+  if (!playerId || !score) return res.status(400).json({ error: 'PlayerId and score are required' });
+  try {
+    const result = await pool.query('UPDATE player SET score = $1 WHERE id = $2 RETURNING *',[score,playerId]);
+    sendMessage({msg:"SCORE",to:"gestion"});
+    sendMessage({msg:"SCORE",to:"admin"});
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating player score:', err);
+    res.status(500).json({ error: 'An error occurred while updating the player score' });
+  }
+});
+
+app.get('/params', async (req, res) => {
+  try {
+    const params = await pool.query('SELECT * FROM params');
+    res.json(params.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/params', async (req, res) => {
+  const { param, value } = req.body;
+  if (!param || value===undefined) return res.status(400).json({ error: 'Param and value are required' });
+  try {
+    const result = await pool.query(`UPDATE params SET ${param} = $1`,[value]);
+    sendMessage({msg:"PARAMS"});
+    res.status(201).json({ message: 'ok' });
+  } catch (err) {
+    console.error('Error updating parameter:', err);
+    res.status(500).json({ error: 'An error occurred while updating the parameter' });
+  }
+});
+
 app.post('/code', async (req, res) => {
   const { code, playerId } = req.body;
+  if (!code || !playerId) return res.status(400).json({ error: 'Code and playerId are required' });
 
   try {
     const gamestep = (await pool.query(`SELECT * FROM gamestep g WHERE g.code = $1`,[code])).rows;
     const currentPlayer = (await pool.query(`SELECT * FROM player p WHERE p.id = $1`,[playerId])).rows;
-
     
     if (currentPlayer.length>0) {
       if (gamestep.length>0 && gamestep[0].id === (currentPlayer[0].step+1)) {
@@ -155,6 +192,7 @@ app.post('/code', async (req, res) => {
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
 
         sendMessage({msg:"SCORE",to:"gestion"});
+        sendMessage({msg:"SCORE",to:"admin"});
         res.status(200).json({ message: 'SUCCESS' });
 
       } else if ((gamestep.length>0 && gamestep[0].id <= currentPlayer[0].step)) {
@@ -167,6 +205,7 @@ app.post('/code', async (req, res) => {
         const newScore = currentPlayer[0].score-30;
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
         sendMessage({msg:"SCORE",to:"gestion"});
+        sendMessage({msg:"SCORE",to:"admin"});
         res.status(200).json({ message: 'ACCIDENT' });
       }
     } else {
@@ -176,6 +215,30 @@ app.post('/code', async (req, res) => {
   } catch (error) {
     console.error('Error fetching gamestep details:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/karaoke', async (req, res) => {
+  try {
+    const songs = await pool.query('SELECT * FROM karaoke');
+    res.json(songs.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/karaoke', async (req, res) => {
+  const { song, submitter } = req.body;
+  if (!song || !submitter) return res.status(400).json({ error: 'Song and submitter are required' });
+
+  try {
+    const result = await pool.query('INSERT INTO karaoke (song,submitter) VALUES ($1,$2) RETURNING *',[song,submitter]);
+    sendMessage({msg:"KARAOKE"});
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error inserting karaoke song:', err);
+    res.status(500).json({ error: 'An error occurred while adding the karaoke song' });
   }
 });
 

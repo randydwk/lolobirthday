@@ -10,7 +10,7 @@ const GameModal = ({ isOpen, onRequestClose, currentPlayer, state }) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={() => {onRequestClose()}}
-      contentLabel="QRCode Success"
+      contentLabel="QRCode Response"
       className="modal text-center"
       overlayClassName="modal-overlay"
     >
@@ -43,7 +43,7 @@ const GameModal = ({ isOpen, onRequestClose, currentPlayer, state }) => {
               <p>-30 points</p>
             </>
           ) : ''}
-          <h3 onClick={() => {onRequestClose()}} className='modal-button btn-danger'>Fermer</h3>
+          <h3 onClick={onRequestClose} className='modal-button btn-danger'>Fermer</h3>
         </>
       )}
     </Modal>

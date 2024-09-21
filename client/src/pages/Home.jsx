@@ -1,24 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import GameModal from './GameModal';
+import KaraokeModal from './KaraokeModal';
 import './styles.css';
 import useWebSocket from "react-use-websocket"
 
 const Home = () => {
+  const [params,setParams] = useState({karaoke:false,votes:false});
+
   const [players,setPlayers] = useState([]);
   const [currentPlayer,setCurrentPlayer] = useState(null);
+
   const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
   const [gameModalState, setGameModalState] = useState(null);
+
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  const karaokeMax = 30;
+  const [karaokeSongs,setKaraokeSongs] = useState([]);
+  const [karaokeModalIsOpen, setKaraokeModalIsOpen] = useState(false);
+
   // Web sockets
-  useWebSocket(process.env.REACT_APP_WS_URL, {
+  const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
     queryParams: { username:currentPlayer?currentPlayer.name:"unknown-user" }
   });
   
   useEffect(() => {
+    if (lastJsonMessage !== null) {
+      if (lastJsonMessage.msg === 'PARAMS') {
+        fetchParams();
+      } else if (lastJsonMessage.msg === 'KARAOKE') {
+        fetchKaraokeSongs();
+      }
+      console.log(lastJsonMessage);
+    }
+  }, [lastJsonMessage])
+
+  useEffect(() => {
     const playerId = window.localStorage.getItem("currentPlayer");
     if (playerId){
       fetchCurrentPlayer(playerId);
+      fetchKaraokeSongs();
+      fetchParams();
 
       const queryParameters = new URLSearchParams(window.location.search);
       const state = queryParameters.get("s");
@@ -49,6 +71,24 @@ const Home = () => {
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
+  }
+
+  const fetchKaraokeSongs = () => {
+    fetch('/karaoke')
+    .then((res) => res.json())
+    .then((data) => setKaraokeSongs(data))
+    .catch((error) => {
+      console.error('Error fetching data:', error);
+    });
+  }
+
+  const fetchParams = () => {
+    fetch('/params')
+    .then((res) => res.json())
+    .then((data) => setParams(data))
+    .catch((error) => {
+      console.error('Error fetching data:', error);
+    });
   }
 
   // Photo
@@ -92,6 +132,19 @@ const Home = () => {
     setGameModalState('');
   };
 
+  // Karaoke Modal
+
+  const openKaraokeModal = () => {
+    document.body.classList.add('no-scroll');
+    setKaraokeModalIsOpen(true);
+  };
+
+  const closeKaraokeModal = () => {
+    document.body.classList.remove('no-scroll');
+    setKaraokeModalIsOpen(false);
+    fetchKaraokeSongs();
+  };
+
   return (
     <div>
       {currentPlayer ? (
@@ -99,33 +152,51 @@ const Home = () => {
           <div className='column-container'>
             <h1 className='bg' style={{marginBlockEnd:0}}>Bonjour {currentPlayer.name} 👋</h1>
             <h3 className='bg'>{currentPlayer.score} points</h3>
-            <div className='top-element title'>Road Trip en Amérique - Étape {currentPlayer.step}</div>
-            <img 
-              src={`images/map/gamestep_${currentPlayer.step}.png`} 
-              alt={`Carte de l'étape ${currentPlayer.steptitle}`} 
-              className='middle-element'
-            />
-            <div className='bottom-element title' style={{fontSize:'1em'}}>{currentPlayer.stepplace}</div>
-              <br></br>
-              <img 
-                src={`images/place/place_${currentPlayer.step}.png`} 
-                alt={`Étape ${currentPlayer.steptitle}`}
-                className='top-element'
-                style={{height:"150px",objectFit:"cover"}}
+            {/* ROAD TRIP */}
+            <div className='top-element title'>🇺🇸 Road Trip aux US - {currentPlayer.step===0 ? 'Départ' : (currentPlayer.step===10 ? 'Fin' : `Étape ${currentPlayer.step}`)}</div>
+            <div className='middle-element' style={{backgroundColor:'white'}}>
+              <img style={{objectFit:'cover',maxWidth:'min(100%,250px)'}} 
+                src={`images/map/gamestep_${currentPlayer.step}.png`} 
+                alt={`Carte de l'étape ${currentPlayer.steptitle}`} 
               />
-              <div className='middle-element title'>{currentPlayer.steptitle}</div>
-              <div className='bottom-element text'>{currentPlayer.stepenigm}</div>
+            </div>
+            <div className='middle-element title' style={{fontSize:'1em'}}>{currentPlayer.stepplace}</div>
+            <img 
+              src={`images/place/place_${currentPlayer.step}.png`} 
+              alt={`Étape ${currentPlayer.steptitle}`}
+              className='middle-element'
+              style={{height:"150px",objectFit:"cover"}}
+            />
+            <div className='middle-element title'>{currentPlayer.steptitle}</div>
+            <div className='bottom-element text'>{currentPlayer.stepenigm}</div>
             <br></br>
+            {/* KARAOKE */}
+            {params.karaoke ? (
+              <>
+                <div className='top-element title'>🎤 Karaoké</div>
+                <div className='middle-element text'>Inscrivez-vous au karaoké avant 22h (dans la limite des places disponibles) ! Cliquez sur le bouton ci-dessous, et saisissez le titre d'une chanson.</div>
+                <div className='middle-element text' style={{textAlign:'center'}}><i>Encore {karaokeMax-karaokeSongs.length} places disponibles</i></div>
+                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}><button onClick={openKaraokeModal} className="btn">Je choisis une chanson</button></div>
+              </>
+            ):''}
+            {/* VOTES */}
+            {params.votes ? (
+              <>
+                <div className='top-element title'>🎭 Concours du meilleur costume</div>
+                <div className='middle-element text'>Sélectionnez une personne et cliquez sur voter pour donner votre voix ! Attention, vous ne pouvez voter qu'une seule fois !</div>
+                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}><button onClick={openKaraokeModal} className="btn">À voter !</button></div>
+              </>
+            ):''}
           </div>
 
           <div className="sticky-bar" v-if="isPart(user.id)&&!isFinished">
             {uploadingPhoto ? <>
-              <button style={{pointerEvents:"none"}} disabled><i className="fa fa-camera"></i> Envoi en cours...</button>
+              <button style={{pointerEvents:"none"}} disabled>📷 Envoi en cours...</button>
             </> : 
             <>
               <label style={{display:"block"}}>
                   <input type="file" accept="image/*" capture="user" style={{display:"none"}} onChange={uploadPhoto}/>
-                  <button style={{pointerEvents:"none"}}><i className="fa fa-camera"></i> Prendre une photo</button>
+                  <button style={{pointerEvents:"none"}}>📷 Prendre une photo</button>
               </label>
             </>}
           </div>
@@ -136,6 +207,12 @@ const Home = () => {
             onRequestClose={closeGameModal}
             currentPlayer={currentPlayer}
             state={gameModalState}
+          />
+
+          <KaraokeModal
+            isOpen={karaokeModalIsOpen}
+            onRequestClose={closeKaraokeModal}
+            currentPlayer={currentPlayer}
           />
         </>
       ) : (
