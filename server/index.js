@@ -105,7 +105,7 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
     const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
     const newPhoto = await pool.query('INSERT INTO photo (filename,author,url) VALUES ($1,$2,$3) RETURNING *',[fileName,authorId,s3Url]);
 
-    sendMessage({msg:"PHOTO",to:"gestion",url:s3Url,authorId:authorId,photoId:newPhoto.rows[0].id});
+    sendMessage({msg:"PHOTO",url:s3Url,authorId:authorId,photoId:newPhoto.rows[0].id});
     res.json({ message: 'Upload successful', photo:newPhoto.rows[0] });
   } catch (err) {
     console.error('Error uploading to S3 or saving to DB:', err.message);
@@ -254,6 +254,16 @@ app.post('/vote', async (req, res) => {
   } catch (err) {
     console.error('Error inserting karaoke song:', err);
     res.status(500).json({ error: 'An error occurred while adding the karaoke song' });
+  }
+});
+
+app.get('/photos', async (req, res) => {
+  try {
+    const photos = await pool.query('SELECT * FROM photo ORDER BY id DESC');
+    res.json(photos.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
 });
 

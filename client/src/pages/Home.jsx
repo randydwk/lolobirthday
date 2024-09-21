@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import GameModal from './GameModal';
 import KaraokeModal from './KaraokeModal';
+import PhotoModal from './PhotoModal';
 import './styles.css';
 import useWebSocket from "react-use-websocket"
 
@@ -13,13 +14,17 @@ const Home = () => {
   const [gameModalIsOpen, setGameModalIsOpen] = useState(false);
   const [gameModalState, setGameModalState] = useState(null);
 
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
   const karaokeMax = 30;
   const [karaokeSongs,setKaraokeSongs] = useState([]);
   const [karaokeModalIsOpen, setKaraokeModalIsOpen] = useState(false);
 
   const [selectedPlayerVote, setSelectedPlayerVote] = useState(null);
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photos, setPhotos] = useState([]);
+  const [photosDisplay, setPhotosDisplay] = useState(9);
+  const [photoModalIsOpen, setPhotoModalIsOpen] = useState(false);
+  const [photoSelected, setPhotoSelected] = useState(null);
 
   // Web sockets
   const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
@@ -32,6 +37,8 @@ const Home = () => {
         fetchParams();
       } else if (lastJsonMessage.msg === 'KARAOKE') {
         fetchKaraokeSongs();
+      } else if (lastJsonMessage.msg === 'PHOTO') {
+        fetchPhotos();
       }
       console.log(lastJsonMessage);
     }
@@ -50,6 +57,7 @@ const Home = () => {
       fetchCurrentPlayer(playerId);
       fetchKaraokeSongs();
       fetchParams();
+      fetchPhotos();
 
       const queryParameters = new URLSearchParams(window.location.search);
       const state = queryParameters.get("s");
@@ -64,6 +72,7 @@ const Home = () => {
     fetchCurrentPlayer(cp.id);
     fetchKaraokeSongs();
     fetchParams();
+    fetchPhotos();
   };
 
   const fetchCurrentPlayer = (playerId) => {
@@ -130,6 +139,7 @@ const Home = () => {
         .then(data => {
             console.log('Upload successful:', data);
             setUploadingPhoto(false);
+            fetchPhotos();
         })
         .catch(error => {
             console.error('Error uploading photo:', error);
@@ -138,6 +148,19 @@ const Home = () => {
         });
       }
   };
+
+  const fetchPhotos = () => {
+    fetch('/photos')
+    .then((res) => res.json())
+    .then((data) => setPhotos(data))
+    .catch((error) => {
+      console.error('Error fetching data:', error);
+    });
+  }
+
+  const displayMorePhotos = () => {
+    setPhotosDisplay(Math.min(photosDisplay+9,photos.length));
+  }
 
   // Game Modal
 
@@ -165,6 +188,21 @@ const Home = () => {
     setKaraokeModalIsOpen(false);
     fetchKaraokeSongs();
   };
+
+  // Photo Modal
+
+  const openPhotoModal = (photo) => {
+    document.body.classList.add('no-scroll');
+    setPhotoSelected(photo);
+    setPhotoModalIsOpen(true);
+  };
+
+  const closePhotoModal = () => {
+    document.body.classList.remove('no-scroll');
+    setPhotoModalIsOpen(false);
+    setPhotoSelected(null);
+  };
+
 
   return (
     <div>
@@ -197,7 +235,7 @@ const Home = () => {
                 <div className='top-element title'>🎤 Karaoké</div>
                 <div className='middle-element text'>Inscrivez-vous au karaoké avant 22h (dans la limite des places disponibles) ! Cliquez sur le bouton ci-dessous, et saisissez le titre d'une chanson.</div>
                 <div className='middle-element text' style={{textAlign:'center'}}><i>Encore {karaokeMax-karaokeSongs.length} places disponibles</i></div>
-                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}><button onClick={openKaraokeModal} className="btn">Je choisis une chanson</button></div>
+                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}><button onClick={openKaraokeModal} className="btn">🎵 Je choisis une chanson</button></div>
               </>
             ):''}
             {/* VOTES */}
@@ -214,19 +252,35 @@ const Home = () => {
                 ) : (
                   <>
                     <div className='middle-element text'>Sélectionnez une personne et cliquez sur voter pour donner votre voix ! Attention, vous ne pouvez voter qu'une seule fois !</div>
-                    <div className='middle-element title'>
+                    <div className='middle-element' style={{ paddingBottom: '16px' }}>
                       <select onChange={(e) => setSelectedPlayerVote(e.target.value)}>
                         <option value="">Choisissez une personne</option>
                         {players.map(player => (<option key={player.id} value={player.id}>{player.name}</option>))}
                       </select>
                     </div>
                     <div className='bottom-element' style={{ paddingBottom: '20px', marginBottom: '20px' }}>
-                      <button onClick={handleVote} className="btn">À voter !</button>
+                      <button onClick={handleVote} className="btn">🗳️ À voter !</button>
                     </div>
                   </>
                 )}
               </>
             ):''}
+            {/* PHOTOS */}
+            <div className='top-element title'>📷 Photos ({photos.length})</div>
+            <div className='middle-element photo-container'>
+              {photos.slice(0,photosDisplay).map(p => (
+                <img
+                  onClick={() => openPhotoModal(p)}
+                  className='photo'
+                  src={p.url}
+                  alt={p.filename}
+                  key={p.id}
+                />
+              ))}
+            </div>
+            <div className='bottom-element' style={{ paddingBottom: '78px', marginBottom: '10px' }}>
+              <button className='btn' onClick={displayMorePhotos} disabled={photosDisplay>=photos.length} style={{pointerEvents:(photosDisplay>=photos.length?'none':'')}}>Afficher plus</button>
+            </div>
           </div>
 
           <div className="sticky-bar" v-if="isPart(user.id)&&!isFinished">
@@ -240,7 +294,6 @@ const Home = () => {
               </label>
             </>}
           </div>
-          <div className='sticky-bar-space'></div>
 
           <GameModal
             isOpen={gameModalIsOpen}
@@ -253,6 +306,13 @@ const Home = () => {
             isOpen={karaokeModalIsOpen}
             onRequestClose={closeKaraokeModal}
             currentPlayer={currentPlayer}
+          />
+
+          <PhotoModal
+            isOpen={photoModalIsOpen}
+            onRequestClose={closePhotoModal}
+            photoSelected={photoSelected}
+            players={players}
           />
         </>
       ) : (

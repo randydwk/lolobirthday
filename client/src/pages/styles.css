@@ -212,10 +212,6 @@ input, select {
     padding: 5px
 }
 
-select {
-    font-size: 0.8em;
-}
-
 /* Separators */
 
 .small-hr {
@@ -236,7 +232,7 @@ select {
     padding: 0 10px;
 }
 
-/* Map */
+/* Elements */
 
 .top-element, .middle-element, .bottom-element {
     box-shadow: 0 0 10px -5px black;
@@ -267,6 +263,23 @@ select {
 .bottom-element {
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
+}
+
+/* Photos */
+
+.photo-container {
+    padding: 5px 5px 15px 5px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+
+.photo {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 16px;
 }
 
 /* Modals */
