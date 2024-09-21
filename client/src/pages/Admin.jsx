@@ -155,9 +155,9 @@ const Admin = () => {
           <>
             <div className='middle-element text' key={karaoke.id}>
               <span style={{textDecoration:(karaoke.checked?'line-through':'none')}}>{karaoke.song} ({players.length>0 ? players.find(p => (p.id===karaoke.submitter)).name : ''})</span>
-              {karaoke.checked ? <button onClick={() => checkKaraokeSong(karaoke.id)} className='btn btn-success'>Fait</button>
-              : <button onClick={() => checkKaraokeSong(karaoke.id)} className='btn'>À faire</button>}
-              <button onClick={() => deleteKaraokeSong(karaoke.id)} className='btn'>Libérer la place</button>
+              {karaoke.checked ? <button onClick={() => checkKaraokeSong(karaoke.id)} className='btn btn-success'><i className='fa fa-square-check'></i></button>
+              : <button onClick={() => checkKaraokeSong(karaoke.id)} className='btn'><i className='fa fa-square'></i></button>}
+              <button onClick={() => deleteKaraokeSong(karaoke.id)} className='btn'><i className='fa fa-trash'></i></button>
             </div>
           </>
         ))}
