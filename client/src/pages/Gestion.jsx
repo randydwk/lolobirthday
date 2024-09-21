@@ -42,7 +42,7 @@ const Gestion = () => {
       } else if (lastJsonMessage.msg === 'VIDEO') {
         if (!lastJsonMessage.url) setVideoUrl('');
         else {
-          const match = lastJsonMessage.url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|embed|watch)\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+          const match = lastJsonMessage.url.match(/(?:https?:\/)?(?:www\.)?(?:youtube\.com\/(?:[^\n\s]+\/\S+\/|(?:v|embed|watch)\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
           const shortMatch = lastJsonMessage.url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
           if (match) {
             setVideoUrl(match[1]);
