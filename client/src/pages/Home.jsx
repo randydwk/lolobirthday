@@ -19,6 +19,8 @@ const Home = () => {
   const [karaokeSongs,setKaraokeSongs] = useState([]);
   const [karaokeModalIsOpen, setKaraokeModalIsOpen] = useState(false);
 
+  const [selectedPlayerVote, setSelectedPlayerVote] = useState(null);
+
   // Web sockets
   const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
     queryParams: { username:currentPlayer?currentPlayer.name:"unknown-user" }
@@ -36,6 +38,13 @@ const Home = () => {
   }, [lastJsonMessage])
 
   useEffect(() => {
+    fetch('/players')
+      .then((res) => res.json())
+      .then((data) => setPlayers(data))
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+
     const playerId = window.localStorage.getItem("currentPlayer");
     if (playerId){
       fetchCurrentPlayer(playerId);
@@ -45,13 +54,6 @@ const Home = () => {
       const queryParameters = new URLSearchParams(window.location.search);
       const state = queryParameters.get("s");
       if (state) openGameModal(state);
-    } else {
-      fetch('/players')
-      .then((res) => res.json())
-      .then((data) => setPlayers(data))
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
     }
   },[]);
 
@@ -60,6 +62,8 @@ const Home = () => {
     setCurrentPlayer(cp);
     window.localStorage.setItem("currentPlayer",playerId);
     fetchCurrentPlayer(cp.id);
+    fetchKaraokeSongs();
+    fetchParams();
   };
 
   const fetchCurrentPlayer = (playerId) => {
@@ -88,6 +92,23 @@ const Home = () => {
     .then((data) => setParams(data))
     .catch((error) => {
       console.error('Error fetching data:', error);
+    });
+  }
+
+  const handleVote = () => {
+    fetch(`/vote`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ playerId:currentPlayer.id, vote:selectedPlayerVote }),
+    }).then((res) => {
+      if (res.ok) {
+        fetchCurrentPlayer(currentPlayer.id);
+        return res.json();
+      } else {
+        throw new Error("Response not ok");
+      }
+    }).catch((error) => {
+      console.error('Error for vote :', error);
     });
   }
 
@@ -183,8 +204,27 @@ const Home = () => {
             {params.votes ? (
               <>
                 <div className='top-element title'>🎭 Concours du meilleur costume</div>
-                <div className='middle-element text'>Sélectionnez une personne et cliquez sur voter pour donner votre voix ! Attention, vous ne pouvez voter qu'une seule fois !</div>
-                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}><button onClick={openKaraokeModal} className="btn">À voter !</button></div>
+                {currentPlayer.hasvoted}
+                {currentPlayer.hasvoted ? (
+                  <>
+                    <div className='middle-element text' style={{textAlign:'center'}}>Merci d'avoir voté !</div>
+                    <div className='bottom-element' style={{height:'16px'}}></div>
+                    <br></br>
+                  </>
+                ) : (
+                  <>
+                    <div className='middle-element text'>Sélectionnez une personne et cliquez sur voter pour donner votre voix ! Attention, vous ne pouvez voter qu'une seule fois !</div>
+                    <div className='middle-element title'>
+                      <select onChange={(e) => setSelectedPlayerVote(e.target.value)}>
+                        <option value="">Choisissez une personne</option>
+                        {players.map(player => (<option key={player.id} value={player.id}>{player.name}</option>))}
+                      </select>
+                    </div>
+                    <div className='bottom-element' style={{ paddingBottom: '20px', marginBottom: '20px' }}>
+                      <button onClick={handleVote} className="btn">À voter !</button>
+                    </div>
+                  </>
+                )}
               </>
             ):''}
           </div>
@@ -220,17 +260,15 @@ const Home = () => {
           <>
             <div className='column-container'>
               <h1 className='bg'>Sélectionnez votre profil</h1>
-              <div>
+              <div className='btn-column'>
                 {players.sort((a,b) => a.name.localeCompare(b.name)).map((player) => (
-                    <div 
-                      key={player.id}
-                      onClick={() => selectPlayer(player.id)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className='box-container'>
-                        <p className='box-text'>{player.name}</p>
-                      </div>
-                    </div>
+                  <button 
+                    key={player.id}
+                    onClick={() => selectPlayer(player.id)}
+                    style={{ cursor: 'pointer' }}
+                    className='btn'
+                  >{player.name}
+                  </button>
                   ))}
               </div>
             </div>

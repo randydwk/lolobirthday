@@ -6,7 +6,7 @@ CREATE TABLE player (
     step INTEGER DEFAULT 0,
     score INTEGER DEFAULT 0,
     votes INTEGER DEFAULT 0,
-    hasVoted BOOLEAN DEFAULT false
+    hasvoted BOOLEAN DEFAULT false
 );
 
 CREATE TABLE gamestep (

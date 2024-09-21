@@ -6,7 +6,7 @@ const Gestion = () => {
   const [players,setPlayers] = useState([]);
   const [photos,setPhotos] = useState([]);
   const [videoUrl,setVideoUrl] = useState('');
-  const maxPhotoSize = 300;
+  const maxPhotoSize = 500;
 
   useEffect(() => {
     fetchPlayers();
@@ -35,7 +35,7 @@ const Gestion = () => {
 
   useEffect(() => {
     if (lastJsonMessage !== null) {
-      if (lastJsonMessage.msg === 'SCORE') {
+      if (lastJsonMessage.msg === 'PLAYERS') {
         fetchPlayers();
       } else if (lastJsonMessage.msg === 'PHOTO') {
         addPhoto(lastJsonMessage.url,lastJsonMessage.authorId,lastJsonMessage.photoId);

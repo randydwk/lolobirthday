@@ -149,6 +149,19 @@ h6 {font-size: 0.75em;}
     background-color: var(--info);
 }
 
+.btn-column {
+    margin: 10px 0px;
+    text-align: center;
+    padding: 3px;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+}
+
+.btn-column .btn {
+    margin-bottom: 16px;
+}
+
 /* Sticky buttons bar */
 
 .sticky-bar {
@@ -193,36 +206,14 @@ h6 {font-size: 0.75em;}
 
 /* Inputs */
 
-input {
+input, select {
     font-size: 1em;
-    border-radius: 8px;
+    border-radius: 16px;
     padding: 5px
 }
 
-/* Boxes */
-
-.box-container {
-    margin: 10px 0px;
-    text-align: center;
-    border: 2px solid var(--text);
-    border-radius: 8px;
-    padding: 3px;
-    background-color: var(--background);
-    min-width: 150px;
-}
-
-.box-image {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-}
-
-.box-text {
-    margin: 3px;
-    font-size: 1.1em;
-    color: var(--text);
+select {
+    font-size: 0.8em;
 }
 
 /* Separators */
@@ -285,7 +276,7 @@ input {
     color: var(--text);
     padding: 20px;
     border: 2px solid var(--text);
-    border-radius: 8px;
+    border-radius: 16px;
     width: 400px;
     max-width: 75%;
     position: fixed;
@@ -313,7 +304,7 @@ input {
     margin-block-end: 0;
     cursor: pointer;
     border: 2px solid var(--text);
-    border-radius: 8px;
+    border-radius: 16px;
     padding: 2px;
 }
 

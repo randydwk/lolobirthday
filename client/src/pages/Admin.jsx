@@ -27,7 +27,7 @@ const Admin = () => {
     if (lastJsonMessage !== null) {
       if (lastJsonMessage.msg === 'PARAMS') {
         fetchParams();
-      } else if (lastJsonMessage.msg === 'SCORE') {
+      } else if (lastJsonMessage.msg === 'PLAYERS') {
         fetchPlayers();
       } else if (lastJsonMessage.msg === 'KARAOKE') {
         fetchKaraokeSongs();
@@ -103,7 +103,7 @@ const Admin = () => {
         <h1 className='bg' style={{marginBlockEnd:0}}>Gestion générale</h1>
         <br></br>
         {/* PLAYERS */}
-        <div className='top-element title'>Joueurs</div>
+        <div className='top-element title'>Scores</div>
         <div className='middle-element title'>
           <input type="number" value={score} onChange={(e) => setScore(e.target.value)} placeholder="Score à mettre à jour"/>
         </div>
@@ -128,6 +128,15 @@ const Admin = () => {
           <button className="btn" onClick={() => {sendJsonMessage({msg:"VIDEO",url:videoUrl})}}>Envoyer</button>
           <button className="btn" onClick={() => {sendJsonMessage({msg:"VIDEO",url:''})}}>Retirer</button>
         </div>
+        <div className='bottom-element' style={{height:'16px'}}></div>
+        <br></br>
+        {/* PLAYERS */}
+        <div className='top-element title'>Votes</div>
+        {players.sort((a,b) => b.votes-a.votes).map(player => (
+          <div className='middle-element text' key={player.id}>
+            <span style={{color:(player.hasvoted?'var(--success)':'var(--danger)')}}>{player.name}</span> : {player.votes}
+          </div>
+        ))}
         <div className='bottom-element' style={{height:'16px'}}></div>
         <br></br>
         {/* PARAMS */}

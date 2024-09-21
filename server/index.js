@@ -129,7 +129,7 @@ app.get('/player/:id', async (req, res) => {
   const playerId = parseInt(req.params.id);
 
   try {
-    const currentPlayer = (await pool.query(`SELECT p.id,name,step,score,place as stepplace,title as steptitle,enigm as stepenigm
+    const currentPlayer = (await pool.query(`SELECT p.id,name,step,score,votes,hasvoted,place as stepplace,title as steptitle,enigm as stepenigm
                                             FROM player p JOIN gamestep g ON p.step=g.id
                                             WHERE p.id = $1`,[playerId])).rows[0];
     res.json(currentPlayer);
@@ -144,8 +144,8 @@ app.post('/playerscore', async (req, res) => {
   if (!playerId || !score) return res.status(400).json({ error: 'PlayerId and score are required' });
   try {
     const result = await pool.query('UPDATE player SET score = $1 WHERE id = $2 RETURNING *',[score,playerId]);
-    sendMessage({msg:"SCORE",to:"gestion"});
-    sendMessage({msg:"SCORE",to:"admin"});
+    sendMessage({msg:"PLAYERS",to:"gestion"});
+    sendMessage({msg:"PLAYERS",to:"admin"});
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error updating player score:', err);
@@ -191,8 +191,8 @@ app.post('/code', async (req, res) => {
         const newScore = currentPlayer[0].score+10+gamestep[0].id*10;
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
 
-        sendMessage({msg:"SCORE",to:"gestion"});
-        sendMessage({msg:"SCORE",to:"admin"});
+        sendMessage({msg:"PLAYERS",to:"gestion"});
+        sendMessage({msg:"PLAYERS",to:"admin"});
         res.status(200).json({ message: 'SUCCESS' });
 
       } else if ((gamestep.length>0 && gamestep[0].id <= currentPlayer[0].step)) {
@@ -204,8 +204,8 @@ app.post('/code', async (req, res) => {
       } else {
         const newScore = currentPlayer[0].score-30;
         await pool.query(`UPDATE player SET score = $1 WHERE id = $2`,[newScore,currentPlayer[0].id]);
-        sendMessage({msg:"SCORE",to:"gestion"});
-        sendMessage({msg:"SCORE",to:"admin"});
+        sendMessage({msg:"PLAYERS",to:"gestion"});
+        sendMessage({msg:"PLAYERS",to:"admin"});
         res.status(200).json({ message: 'ACCIDENT' });
       }
     } else {
@@ -236,6 +236,21 @@ app.post('/karaoke', async (req, res) => {
     const result = await pool.query('INSERT INTO karaoke (song,submitter) VALUES ($1,$2) RETURNING *',[song,submitter]);
     sendMessage({msg:"KARAOKE"});
     res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error inserting karaoke song:', err);
+    res.status(500).json({ error: 'An error occurred while adding the karaoke song' });
+  }
+});
+
+app.post('/vote', async (req, res) => {
+  const { playerId, vote } = req.body;
+  if (!playerId || !vote) return res.status(400).json({ error: 'PlayerId and vote are required' });
+
+  try {
+    await pool.query('UPDATE player SET votes = votes+1 WHERE id = $1',[vote]);
+    await pool.query('UPDATE player SET hasvoted = true WHERE id = $1',[playerId]);
+    sendMessage({msg:"PLAYERS",to:"admin"});
+    res.status(201).json({message:'ok'});
   } catch (err) {
     console.error('Error inserting karaoke song:', err);
     res.status(500).json({ error: 'An error occurred while adding the karaoke song' });
