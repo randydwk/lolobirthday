@@ -242,6 +242,38 @@ app.post('/karaoke', async (req, res) => {
   }
 });
 
+app.post('/karaokecheck', async (req, res) => {
+  const { song } = req.body;
+  if (!song) return res.status(400).json({ error: 'Song is required' });
+
+  try {
+    const result = await pool.query('UPDATE karaoke SET checked = NOT checked WHERE id = $1 RETURNING *',[song]);
+    sendMessage({msg:"KARAOKE",to:"admin"});
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error checking karaoke song:', err);
+    res.status(500).json({ error: 'An error occurred while checking the karaoke song' });
+  }
+});
+
+app.delete('/karaoke/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const result = await pool.query('DELETE FROM karaoke WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Karaoke song not found' });
+    }
+
+    sendMessage({msg:"KARAOKE"});
+    res.status(200).json({ message: 'Karaoke song deleted', deletedSong: result.rows[0] });
+  } catch (error) {
+    console.error('Error deleting karaoke song:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.post('/vote', async (req, res) => {
   const { playerId, vote } = req.body;
   if (!playerId || !vote) return res.status(400).json({ error: 'PlayerId and vote are required' });

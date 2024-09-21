@@ -97,6 +97,39 @@ const Admin = () => {
     });
   }
 
+  const checkKaraokeSong = (song) => {
+    fetch(`/karaokecheck`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ song:song }),
+    }).then((res) => {
+      if (res.ok) {
+        fetchKaraokeSongs();
+        return res.json();
+      } else {
+        throw new Error("Response not ok");
+      }
+    }).catch((error) => {
+      console.error('Error checking karaoke song :', error);
+    });
+  }
+
+  const deleteKaraokeSong = (song) => {
+    fetch(`/karaoke/${song}`, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+    }).then((res) => {
+      if (res.ok) {
+        fetchKaraokeSongs();
+        return res.json();
+      } else {
+        throw new Error("Response not ok");
+      }
+    }).catch((error) => {
+      console.error('Error deleting karaoke song :', error);
+    });
+  }
+
   return (
     <div>
       <div className='column-container'>
@@ -119,7 +152,14 @@ const Admin = () => {
         {/* KARAOKE */}
         <div className='top-element title'>Karaoke ({karaokeSongs.length}/{karaokeMax})</div>
         {karaokeSongs.map(karaoke => (
-          <div className='middle-element text' key={karaoke.id}>{karaoke.song} ({players.length>0 ? players.find(p => (p.id===karaoke.submitter)).name : ''})</div>
+          <>
+            <div className='middle-element text' key={karaoke.id}>
+              <span style={{textDecoration:(karaoke.checked?'line-through':'none')}}>{karaoke.song} ({players.length>0 ? players.find(p => (p.id===karaoke.submitter)).name : ''})</span>
+              {karaoke.checked ? <button onClick={() => checkKaraokeSong(karaoke.id)} className='btn btn-success'>Fait</button>
+              : <button onClick={() => checkKaraokeSong(karaoke.id)} className='btn'>À faire</button>}
+              <button onClick={() => deleteKaraokeSong(karaoke.id)} className='btn'>Libérer la place</button>
+            </div>
+          </>
         ))}
         <div className='middle-element title'>
           <input type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="Lien YouTube"/>

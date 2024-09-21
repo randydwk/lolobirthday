@@ -27,6 +27,7 @@ CREATE TABLE photo (
 CREATE TABLE karaoke (
     id SERIAL PRIMARY KEY,
     song TEXT,
+    checked BOOLEAN DEFAULT false,
     submitter INTEGER REFERENCES player(id)
 );
 

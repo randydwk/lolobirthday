@@ -234,8 +234,10 @@ const Home = () => {
               <>
                 <div className='top-element title'>🎤 Karaoké</div>
                 <div className='middle-element text'>Inscrivez-vous au karaoké avant 22h (dans la limite des places disponibles) ! Cliquez sur le bouton ci-dessous, et saisissez le titre d'une chanson.</div>
-                <div className='middle-element text' style={{textAlign:'center'}}><i>Encore {karaokeMax-karaokeSongs.length} places disponibles</i></div>
-                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}><button onClick={openKaraokeModal} className="btn">🎵 Je choisis une chanson</button></div>
+                <div className='middle-element text' style={{textAlign:'center'}}><i>{karaokeMax-karaokeSongs.length} places disponibles</i></div>
+                <div className='bottom-element' style={{paddingBottom:'20px',marginBottom:'20px'}}>
+                  <button onClick={openKaraokeModal} className="btn" disabled={karaokeSongs.length>=karaokeMax} style={{pointerEvents:(karaokeSongs.length>=karaokeMax?'none':'')}}>🎵 Je choisis une chanson</button>
+                </div>
               </>
             ):''}
             {/* VOTES */}
