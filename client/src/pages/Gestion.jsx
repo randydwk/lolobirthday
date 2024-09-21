@@ -99,10 +99,10 @@ const Gestion = () => {
             width={window.innerWidth}
             height={window.innerHeight}
             style={{position:'fixed',zIndex:'-10'}}
-            src={`https://www.youtube.com/embed/${videoUrl}?autoplay=1&mute=1&controls=0`}
+            src={`https://www.youtube.com/embed/${videoUrl}?autoplay=1&controls=0`}
             title="YouTube video player"
             frameborder="0"
-            allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen>
           </iframe>:''}
