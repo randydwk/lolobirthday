@@ -115,8 +115,8 @@ const Gestion = () => {
                 position: 'absolute',
                 left: `${photo.xPos}px`,
                 top: `${photo.yPos}px`,
-                maxWidth: '300px',
-                maxHeight: '300px',
+                maxWidth: `${maxPhotoSize}px`,
+                maxHeight: `${maxPhotoSize}px`,
                 zIndex: 100,
                 opacity:(videoUrl?'0.5':'1')
               }}
